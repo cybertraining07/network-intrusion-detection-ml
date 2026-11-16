@@ -1,0 +1,20 @@
+# Original CIC-IDS2017 dataset
+MachineLearningCVE/
+MachineLearningCSV.zip
+
+# Generated datasets
+*.csv
+
+# Python environments and cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Large trained model files
+*.joblib
+*.pkl
+
+# Temporary and system files
+*.log
+.DS_Store
