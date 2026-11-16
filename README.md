@@ -289,3 +289,9 @@ This project demonstrates practical exploration of:
 
 **GitHub Repository:**  
 https://github.com/cybertraining07/network-intrusion-detection-ml
+
+## System Architecture
+
+The diagram below summarizes the end-to-end workflow, from CIC-IDS2017 data preparation through model training, evaluation, and explainability.
+
+![Machine Learning-Based Network Intrusion Detection Architecture](project_architecture.png)
