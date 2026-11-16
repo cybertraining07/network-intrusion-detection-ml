@@ -38,6 +38,47 @@ High accuracy on a test split does not guarantee reliable detection of previousl
 
 The results are experimental and should not be interpreted as production-ready detection performance.
 
+## Model Evaluation and Error Analysis
+
+Model performance was assessed using accuracy, precision, recall, F1-score, and cross-family testing. These metrics provide a more complete view of intrusion detection performance than accuracy alone.
+
+### Web Attack Model: Five-Fold Cross-Validation
+
+The following results compare the original Random Forest model with the model trained using SMOTE.
+
+| Metric | Original Random Forest | Random Forest with SMOTE |
+|---|---:|---:|
+| Accuracy | 89.29% | 88.24% |
+| Macro Precision | 80.72% | 76.89% |
+| Macro Recall | 67.13% | 70.84% |
+| Macro F1-score | 70.28% | 71.39% |
+| Weighted F1-score | 89.50% | 88.64% |
+
+SMOTE improved macro recall and macro F1-score, indicating better overall balance across classes. However, accuracy, macro precision, and weighted F1-score decreased. This demonstrates the trade-offs involved in handling imbalanced attack datasets.
+
+### Understanding Detection Errors
+
+- **True Positive (TP):** Malicious traffic correctly identified as an attack.
+- **True Negative (TN):** Benign traffic correctly identified as benign.
+- **False Positive (FP):** Benign traffic incorrectly flagged as malicious. This can create unnecessary security alerts.
+- **False Negative (FN):** Malicious traffic incorrectly classified as benign. This can allow an attack to go undetected.
+
+In intrusion detection, false negatives are particularly important because missed attacks can create security risks. False positives also matter because excessive alerts can increase analyst workload.
+
+### Cross-Family Evaluation Findings
+
+Cross-family tests exposed weaknesses in recognizing attack categories outside the models' original training classes:
+
+- DDoS model against PortScan: approximately 0.05% recall.
+- Seven-class model against Wednesday DoS traffic: approximately 0.42% recall.
+- Web Attack model against FTP-Patator: 5 alerts among 1,989 records.
+
+These results demonstrate that strong performance on a conventional test split does not guarantee reliable detection of different or previously unseen attack families.
+
+### Confusion Matrix Reporting
+
+Confusion matrices and exact per-class false-positive and false-negative counts should be reported alongside classification metrics when the verified evaluation outputs are available. Exact counts are not included here because they have not yet been consolidated for every experiment.
+
 ## Project Objectives
 
 - Explore and preprocess CIC-IDS2017 network traffic data.
