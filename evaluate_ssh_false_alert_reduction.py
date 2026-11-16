@@ -3,90 +3,78 @@ import joblib
 import numpy as np
 import pandas as pd
 
-# Load models
+# Load both trained models
 web_model = joblib.load("webattack_detection_model.joblib")
-reduction_model = joblib.load(
-    "ssh_false_alert_reduction_model.joblib"
-)
+reduction_model = joblib.load("ssh_false_alert_reduction_model.joblib")
 
-# Load dataset
+# Load SSH-Patator test data
 df = pd.read_csv("crossfamily_test.csv")
 df.columns = df.columns.str.strip()
 df["Label"] = df["Label"].astype(str).str.strip()
 
-# Select SSH-Patator traffic
 ssh = df[df["Label"] == "SSH-Patator"].copy()
 
-# Prepare features
+# Prepare model features
 features = joblib.load("webattack_feature_names.joblib")
 X = ssh[features].copy()
 X = X.replace([np.inf, -np.inf], np.nan)
 
-# Original model predictions
+# Generate predictions
 original_predictions = web_model.predict(X)
-
-# Second-stage model predictions
 reduction_predictions = reduction_model.predict(X)
 
-# Original alerts
+# Class 1 means the second-stage model predicts an original alert.
+# Class 0 means it predicts an original BENIGN decision.
 original_alerts = original_predictions != "BENIGN"
+second_stage_alerts = reduction_predictions == 1
 
-# Second-stage identifies alerts to suppress
-suppressed = reduction_predictions == 1
+# Keep original alerts confirmed by the second-stage model.
+# Suppress original alerts predicted as class 0.
+retained_alerts = original_alerts & second_stage_alerts
+suppressed_alerts = original_alerts & ~second_stage_alerts
 
-# Alerts remaining after filtering
-remaining_alerts = original_alerts & ~suppressed
+# Count results
+total = len(ssh)
+original_count = int(original_alerts.sum())
+retained_count = int(retained_alerts.sum())
+suppressed_count = int(suppressed_alerts.sum())
+benign_flagged = int(((~original_alerts) & second_stage_alerts).sum())
 
-# Summary
-print("\nSSH FALSE-ALERT REDUCTION EVALUATION")
-print("=" * 55)
+print("\nCORRECTED SSH FALSE-ALERT FILTERING EVALUATION")
+print("=" * 50)
+print("Total SSH records:", total)
+print("Original Web Attack alerts:", original_count)
+print("Original BENIGN predictions:", int((~original_alerts).sum()))
+print("Alerts retained:", retained_count)
+print("Alerts suppressed:", suppressed_count)
+print("Original BENIGN records flagged by second stage:", benign_flagged)
 
-print("Total SSH records:", len(ssh))
-print("Original alerts:", original_alerts.sum())
-print("Original BENIGN predictions:", (~original_alerts).sum())
-print("Alerts suppressed:", (original_alerts & suppressed).sum())
-print("Alerts remaining:", remaining_alerts.sum())
+if original_count:
+    print("Alert suppression rate: {:.2f}%".format(
+        suppressed_count / original_count * 100
+    ))
 
-# Alert suppression rate
-if original_alerts.sum() > 0:
-    rate = (
-        (original_alerts & suppressed).sum()
-        / original_alerts.sum()
-    )
-    print(f"Alert suppression rate: {rate:.2%}")
+print("\nSECOND-STAGE PREDICTION DISTRIBUTION")
+print(pd.Series(reduction_predictions).value_counts().sort_index())
 
-# Check reduction model behavior
-print("\nSECOND-STAGE PREDICTIONS")
-print(pd.Series(reduction_predictions).value_counts())
-print("\nDETAILED FILTERING CHECK")
-print("-" * 45)
+print("\nINTERPRETATION")
+print("Class 1 = retain/confirm original alert")
+print("Class 0 = candidate for suppressing original alert")
+print("Suppression does not prove an alert was a false positive.")
 
-print("Original alerts flagged by reduction model:",
-      (original_alerts & suppressed).sum())
-
-print("Original BENIGN records flagged by reduction model:",
-      ((~original_alerts) & suppressed).sum())
-
-print("Original alerts not flagged by reduction model:",
-      (original_alerts & ~suppressed).sum())
-
-print("Total records flagged by reduction model:",
-      suppressed.sum())
-# Save evaluation results
+# Save corrected results
 results = pd.DataFrame([{
-    "Total SSH Records": len(ssh),
-    "Original Alerts": int(original_alerts.sum()),
-    "Original BENIGN Predictions": int((~original_alerts).sum()),
-    "Alerts Suppressed": int((original_alerts & suppressed).sum()),
-    "Alerts Remaining": int(remaining_alerts.sum()),
-    "Original BENIGN Records Flagged": int(((~original_alerts) & suppressed).sum()),
-    "Total Second-Stage Alerts": int(suppressed.sum())
+    "Total SSH Records": total,
+    "Original Alerts": original_count,
+    "Alerts Retained": retained_count,
+    "Alerts Suppressed": suppressed_count,
+    "Original BENIGN Records Flagged": benign_flagged,
+    "Alert Suppression Rate (%)": (
+        round(suppressed_count / original_count * 100, 2)
+        if original_count else 0
+    )
 }])
 
-results.to_csv(
-    "ssh_false_alert_reduction_results.csv",
-    index=False
-)
+results.to_csv("ssh_false_alert_reduction_results.csv", index=False)
 
-print("\nResults saved: ssh_false_alert_reduction_results.csv")
-print("\nEvaluation completed.")
+print("\nCorrected results saved to ssh_false_alert_reduction_results.csv")

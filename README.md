@@ -362,3 +362,44 @@ https://github.com/cybertraining07/network-intrusion-detection-ml
 The diagram below summarizes the end-to-end workflow, from CIC-IDS2017 data preparation through model training, evaluation, and explainability.
 
 ![Machine Learning-Based Network Intrusion Detection Architecture](project_architecture.png)
+
+## SSH-Patator False-Alert Reduction Experiment
+
+### Objective
+
+Investigate whether a second-stage machine learning model can identify SSH-Patator traffic that the original Web Attack classifier incorrectly labels as Web Attack activity.
+
+### Methodology
+
+1. Extracted SSH-Patator records from the CIC-IDS2017 cross-family dataset.
+2. Applied the original Web Attack Random Forest model.
+3. Identified 98 SSH records classified as Web Attack alerts.
+4. Trained a second-stage Random Forest classifier to learn the original model's alert decisions.
+5. Evaluated the second-stage model's filtering behavior.
+
+### Experimental Results
+
+| Metric | Result |
+|---|---:|
+| Total SSH records | 1,182 |
+| Original Web Attack alerts | 98 |
+| Original BENIGN predictions | 1,084 |
+| Alerts identified for suppression | 98 |
+| Alerts remaining after filtering | 0 |
+| Original BENIGN records flagged | 5 |
+| Total second-stage alerts | 103 |
+
+### Interpretation
+
+The second-stage model identified all 98 original Web Attack alerts in this experiment. It also flagged five records that the original classifier had predicted as BENIGN.
+
+The experiment demonstrates a potential two-stage alert-filtering approach for investigating cross-family classification behavior.
+
+### Limitations
+
+- The second-stage model was trained using labels derived from the original model's predictions.
+- The evaluation used the same SSH dataset involved in training, so the result is not an independent generalization test.
+- Suppressed alerts have not been independently verified as false positives.
+- Further testing on unseen SSH traffic and other attack families is required.
+
+The 100% alert suppression result should therefore be interpreted as an in-sample experimental filtering result, not a validated reduction in false positives.
