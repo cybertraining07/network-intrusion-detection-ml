@@ -12,6 +12,32 @@ A key focus is understanding not only model accuracy, but also how well models r
 
 **Project status:** Experimental research and portfolio project. Models have not been validated for production deployment.
 
+## Results Summary
+
+The project evaluated multiple Random Forest intrusion detection models using CIC-IDS2017 traffic data.
+
+| Experiment | Reported Result |
+|---|---:|
+| Binary DDoS detection | 99.96% accuracy |
+| BENIGN / DDoS / PortScan classification | 99.94% accuracy |
+| Seven-class intrusion classification | 99.78% accuracy |
+| Web Attack original Random Forest | 89.29% five-fold CV accuracy |
+| Web Attack with SMOTE | 88.24% five-fold CV accuracy |
+
+### Key Evaluation Findings
+
+- SMOTE improved Web Attack macro F1 from 70.28% to 71.39%, while overall accuracy decreased.
+- Cross-family testing exposed poor recognition of some attack types not adequately represented during training.
+- The DDoS model achieved approximately 0.05% recall against PortScan traffic.
+- The seven-class model achieved approximately 0.42% recall against Wednesday DoS traffic.
+- The Web Attack model generated 5 alerts among 1,989 FTP-Patator records.
+
+### Interpretation
+
+High accuracy on a test split does not guarantee reliable detection of previously unseen attack families. These experiments highlight the importance of class-level metrics, independent testing, class imbalance analysis, and cross-family evaluation.
+
+The results are experimental and should not be interpreted as production-ready detection performance.
+
 ## Project Objectives
 
 - Explore and preprocess CIC-IDS2017 network traffic data.
